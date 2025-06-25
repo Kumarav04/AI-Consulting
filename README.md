@@ -2,8 +2,7 @@
 
 Lightweight FastAPI app with:
 - 📁 **File upload** panel  
-- 🤖 **Chatbot** panel (wired for OpenAI GPT)  
-- ⚡ No database required
+- 🤖 **Chatbot** panel (wired for OpenAI GPT)
 
 ## 🚀 Quick start
 
