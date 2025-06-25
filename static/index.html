@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ConsultBot</title>
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+  <div class="container">
+    
+    <!-- Left Panel: File Upload -->
+    <div class="upload-panel">
+      <h2>Upload a File</h2>
+      <form id="uploadForm">
+        <input type="file" name="file" id="fileInput" />
+        <button type="submit">Upload</button>
+      </form>
+      <p id="uploadStatus"></p>
+    </div>
+
+    <!-- Right Panel: Chatbot -->
+    <div class="chat-panel">
+      <h2>ConsultBot</h2>
+      <div id="chatWindow" class="chat-window"></div>
+      <form id="chatForm">
+        <input type="text" id="chatInput" placeholder="Ask a question..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+
+  </div>
+
+  <script src="/static/scripts.js"></script>
+</body>
+</html>
