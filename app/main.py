@@ -5,6 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from app import api
 import os
+import tempfile, pathlib
 
 app = FastAPI()
 
@@ -27,3 +28,11 @@ def read_root():
 
 # Include your API routes
 app.include_router(api.router)
+
+app.mount(
+    "/generated",
+    StaticFiles(directory=pathlib.Path(tempfile.gettempdir())),
+    name="generated",
+)
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static")

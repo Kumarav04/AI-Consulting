@@ -131,3 +131,19 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
+
+.chat-window img {
+  display: block;
+  max-width: 100%;
+  margin-bottom: 1rem;
+  border-radius: 6px;
+}
+
+.chat-window h3 {
+  margin: .75rem 0 .25rem;
+  font-size: 1.05rem;
+  color: #f0f0f0;
+  font-weight: 600;
+}
+.chat-window strong { color: #ffd700; }   /* or any accent colour */
+

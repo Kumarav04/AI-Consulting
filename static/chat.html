@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ConsultBot – <span id="uc-title"></span></title>
+
+  <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/script.js"></script>
+</head>
+<body>
+  <header class="headline">
+    <h1 id="uc-header">ConsultBot</h1>
+  </header>
+
+  <main class="main-grid">
+    <!-- full-width chatbot panel -->
+    <aside class="chatbot-panel">
+      <!-- prompt engineering banner -->
+      <h2 id="uc-subhead"></h2>
+
+      <div class="placeholder-tips">
+        <p><strong>Workflow:</strong></p>
+        <ol>
+          <li>Upload a file for the <span id="uc-flow"></span> assistant.</li>
+          <li>The assistant will ask about your goals before analysing.</li>
+        </ol>
+      </div>
+
+      <!-- UPLOAD -->
+      <form id="uploadForm" class="upload-form">
+        <input type="file" id="fileInput" />
+        <button type="submit" title="Upload File">📎</button>
+      </form>
+      <div id="uploadStatus"></div>
+
+      <!-- CHAT -->
+      <div id="chatWindow" class="chat-window"></div>
+
+      <form id="chatForm" class="chat-form">
+        <input type="text" id="chatInput" placeholder="Type a message…" autocomplete="off" />
+        <button type="submit" title="Send Message">➡️</button>
+      </form>
+    </aside>
+  </main>
+</body>
+</html>

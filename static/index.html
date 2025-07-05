@@ -2,50 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>ConsultBot</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Winner Consulting AI</title>
+
   <link rel="stylesheet" href="/static/styles.css">
+  <script defer src="/static/script.js"></script>
 </head>
 <body>
   <header class="headline">
     <h1>Winner Consulting AI</h1>
   </header>
 
-  <main class="main-grid">
-    <section class="use-cases">
-      <div class="use-case" data-info="Helps track stock easily.">Use Case #1</div>
-      <div class="use-case" data-info="Automates invoice matching.">#2</div>
-      <div class="use-case" data-info="Forecasts sales trends.">#3</div>
-      <div class="use-case" data-info="Saves time on reporting.">#4</div>
-      <div class="use-case" data-info="Improves team insights.">#5</div>
-    </section>
-
-    <aside class="chatbot-panel">
-      <h2>ConsultBot</h2>
-      <div class="placeholder-tips">
-        <p><strong>Initial placeholders:</strong></p>
-        <ul>
-          <li>Ask like: "How much stock left in April?"</li>
-          <li><em>Upload your sales files</em>.</li>
-        </ul>
-      </div>
-
-      <form id="uploadForm" class="upload-form">
-        <input type="file" id="fileInput" />
-        <button type="submit" title="Upload File">📎</button>
-      </form>
-
-      <div id="uploadStatus"></div>
-
-      <div id="chatWindow" class="chat-window"></div>
-
-      <form id="chatForm" class="chat-form">
-        <input type="text" id="chatInput" placeholder="Ask a question..." autocomplete="off" />
-        <button type="submit" title="Send Message">➡️</button>
-      </form>
-    </aside>
+  <!-- Just the tiles -->
+  <main class="use-cases landing">
+    <div class="use-case" data-usecase="Revenue Optimization"
+         data-info="Helps optimize your revenue using advanced visualizations and inference.">
+      Revenue Optimization
+    </div>
+    <div class="use-case" data-usecase="Invoice Matching"
+         data-info="Automates invoice matching.">Invoice Matching</div>
+    <div class="use-case" data-usecase="Sales Forecasting"
+         data-info="Forecasts sales trends.">Sales Forecasting</div>
+    <div class="use-case" data-usecase="Reporting Automation"
+         data-info="Saves time on reporting.">Reporting Automation</div>
+    <div class="use-case" data-usecase="Team Insights"
+         data-info="Improves team insights.">Team Insights</div>
   </main>
-
-  <script src="/static/scripts.js"></script>
 </body>
 </html>
