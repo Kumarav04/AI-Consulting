@@ -6,8 +6,7 @@ console.log("🔗 script.js connected");
 /* ---------- 0. shared helpers ---------- */
 const SESSION_KEY = "consultbot-session-id";
 if (!localStorage.getItem(SESSION_KEY)) localStorage.setItem(SESSION_KEY, crypto.randomUUID());
-const SESSION_ID = localStorage.getItem(SESSION_KEY);
-const addSession = (h = {}) => ({ ...h, "X-Session-ID": SESSION_ID });
+const addSession = (h = {}) => ({ ...h, "X-Session-ID": localStorage.getItem(SESSION_KEY) });
 
 function formatGPT(txt) {              // very light markdown → HTML
   return txt
@@ -32,12 +31,14 @@ if (document.querySelector(".chatbot-panel")) {
   // 2-A) use-case context
   const params   = new URLSearchParams(window.location.search);
   const USE_CASE = params.get("use_case") || "General";
-  document.getElementById("uc-title").textContent =
-  document.getElementById("uc-header").textContent =
-  document.getElementById("uc-subhead").textContent =
-  document.getElementById("uc-flow").textContent   = USE_CASE;
+  document.title = `ConsultBot – ${USE_CASE}`;           
+  ["uc-header", "uc-subhead", "uc-flow"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = USE_CASE;                  
+  });
 
   // 2-B) stage flags
+  const chartsPanel = document.getElementById("chartsPanel");
   let fileUploaded   = false;   // user provided a dataset?
   let goalsCollected = false;   // user has told us their goals?
 
@@ -69,6 +70,10 @@ if (document.querySelector(".chatbot-panel")) {
           headers: addSession()
         });
         if (!res.ok) throw new Error(`Server responded ${res.status}`);
+        const data = await res.json();
+        if (data.session_id) {
+          localStorage.setItem(SESSION_KEY, data.session_id);
+        }
 
         status.textContent = "File received ✅";
         fileUploaded = true;
@@ -118,16 +123,15 @@ if (document.querySelector(".chatbot-panel")) {
         const data = await res.json();   // backend returns { reply, charts? }
 
         // charts appear only after goals have been supplied
-        if (data.chart_paths && data.chart_paths.length) {
+        if (data.chart_paths?.length) {
+          chartsPanel.innerHTML = "";             // clear old charts
           data.chart_paths.forEach(p => {
             const img = document.createElement("img");
-            img.src  = `/generated/${p}`;
-            img.alt  = p;
-            img.style.maxWidth = "100%";
-            img.style.marginTop = "1rem";
-            chatWindow.appendChild(img);
+            img.src = `/generated/${p}`;
+            img.alt = p;
+            chartsPanel.appendChild(img);         
           });
-        }
+        }        
 
         waitDiv.innerHTML = formatGPT(data.reply);
       } catch (err) {

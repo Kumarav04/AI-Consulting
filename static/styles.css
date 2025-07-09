@@ -15,8 +15,9 @@ body {
 
 .main-grid {
   display: grid;
-  grid-template-columns: 2fr 1fr;
-  height: calc(100vh - 80px);
+  grid-template-columns: 3fr 2fr;   /* 60% chat | 40% charts  */
+  gap: 2rem;
+  height: calc(100vh - 80px);       /* keep full height */
 }
 
 .use-cases {
@@ -147,3 +148,16 @@ body {
 }
 .chat-window strong { color: #ffd700; }   /* or any accent colour */
 
+.insights-panel {
+  background-color: #2d2d2d;
+  padding: 1.5rem;
+  overflow-y: auto;
+  border-left: 1px solid #444;
+}
+
+.charts-container img {
+  max-width: 100%;
+  margin-top: 1rem;
+  border-radius: 4px;
+  box-shadow: 0 0 5px rgba(0,0,0,0.4);
+}
