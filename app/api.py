@@ -7,7 +7,7 @@ from fastapi import APIRouter, File, UploadFile, HTTPException, Request, Query
 from fastapi.responses import JSONResponse, PlainTextResponse
 from openai import AsyncOpenAI, OpenAIError
 
-from app.standardize import standardize_csv
+from app.standardize import standardize_csv, ColumnMappingNeeded
 from app.visualize  import create_visualizations
 
 client       = AsyncOpenAI()
@@ -45,8 +45,14 @@ async def upload(
 # /chat – first call runs analysis, later calls follow-up
 # ────────────────────────────────────────────
 
+
 @router.post("/chat")
 async def chat(request: Request):
+    """Single-user chat flow:
+       1) first prompt  -> treat as goals, try analysis
+       2) mapping phase -> user maps missing columns
+       3) follow-ups    -> normal Q&A, staying on topic
+    """
     data   = await request.json()
     prompt = data.get("prompt", "").strip()
     if not prompt:
@@ -55,69 +61,72 @@ async def chat(request: Request):
     if not STATE["csv"]:
         raise HTTPException(400, "Upload a CSV first.")
 
-    # ── First call after upload: treat prompt as user goals & analyse ──
+    # ──────────────────────────────────────────────
+    # 1) FIRST CALL  ➜ run analysis or ask for mapping
+    # ──────────────────────────────────────────────
     if STATE["analysis"] is None:
-        STATE["goals"] = prompt            # remember the goals
+        STATE["goals"] = prompt                 # remember goals
         try:
             std_csv = standardize_csv(STATE["csv"])
             images  = create_visualizations(std_csv, STATE["csv"].parent)
-        except Exception as exc:
-            raise HTTPException(400, f"Processing failed: {exc}") from exc
+        except ColumnMappingNeeded as e:
+            # ask user to map missing columns
+            STATE["missing"] = e.missing
+            missing_lines   = "\n".join(f"* {c}" for c in e.missing)
+            return JSONResponse({
+                "reply": (
+                    "I need your help mapping these missing columns:\n"
+                    f"{missing_lines}\n\n"
+                    "Please reply in the format:\n"
+                    "`<CSV column>` = <Canonical column>`"
+                )
+            })
 
-        encoded = [
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": "data:image/png;base64," + base64.b64encode(img.read_bytes()).decode()
-                },
-            }
-            for img in images
-        ]
-
-        system_prompt = (
-            f"You are ConsultBot, a highly skilled data analyst with expertise in {STATE['use_case']}.\n"
-            f"The user’s goals are: {STATE['goals']}.\n\n"
-            "Your task is to interpret the uploaded dataset and the associated charts to generate practical, data-driven insights and recommendations that directly support the user's goals.\n"
-            "- Do not speculate or hallucinate data.\n"
-            "- Use only what is visible in the charts and dataset.\n"
-            "- If you are unsure, say so.\n\n"
-            "Important: If the user asks a question unrelated to the dataset, charts, or stated goals, respond politely:\n"
-            "→ \"I'm here to help with business insights based on your uploaded data. Let's focus on that.\"\n"
-        )
-
-        try:
-            res = await client.chat.completions.create(
-                model=OPENAI_MODEL,
-                messages=[
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user",   "content": [*encoded, {"type": "text", "text": "Provide your analysis."}]},
-                ],
-            )
-            summary = res.choices[0].message.content
-        except OpenAIError as exc:
-            raise HTTPException(500, f"OpenAI error: {exc}") from exc
-
+        # analysis succeeded — call GPT, cache & return
+        summary = await _gpt_analysis(images)
         STATE["analysis"] = {"summary": summary, "images": images}
         return JSONResponse({"reply": summary, "chart_paths": [img.name for img in images]})
 
-    # ── Follow-up questions ──────────────────────────────────────────
+    # ──────────────────────────────────────────────
+    # 2) MAPPING PHASE  ➜ user supplies column map
+    # ──────────────────────────────────────────────
+    if STATE.get("missing"):
+        user_map = {}
+        for line in prompt.splitlines():
+            if "=" in line:
+                src, canon = [s.strip() for s in line.split("=", 1)]
+                user_map[src] = canon
+
+        try:
+            std_csv = standardize_csv(STATE["csv"], user_map=user_map)
+            images  = create_visualizations(std_csv, STATE["csv"].parent)
+            del STATE["missing"]            # mapping worked
+        except ColumnMappingNeeded as e:
+            STATE["missing"] = e.missing    # still missing
+            return JSONResponse({"reply": "Still missing: " + ", ".join(e.missing)})
+
+        summary = await _gpt_analysis(images)
+        STATE["analysis"] = {"summary": summary, "images": images}
+        return JSONResponse({"reply": summary, "chart_paths": [img.name for img in images]})
+
+    # ──────────────────────────────────────────────
+    # 3) FOLLOW-UP QUESTIONS
+    # ──────────────────────────────────────────────
     follow_system = (
-        f"You are ConsultBot, continuing to assist with business analytics for {STATE['use_case']}.\n"
-        f"The user’s goals are: {STATE['goals']}.\n\n"
-        "Use only the original dataset, the charts, and the prior analysis to answer follow-up questions.\n"
-        "Stay strictly within the context of the dataset and business goals.\n"
-        "- Do not answer questions about unrelated topics (e.g., tanks, philosophy, life advice).\n"
-        "- If a question is out of scope, say:\n"
-        "→ \"I'm here to help with business insights based on your uploaded data. Let's focus on that.\"\n"
+        f"You are ConsultBot, specialised in {STATE['use_case']}.\n"
+        f"User goals: {STATE['goals']}.\n"
+        "Only answer questions related to this dataset and goals.\n"
+        "If out of scope, say:\n"
+        "\"I'm here to help with business insights based on your data. Let's focus on that.\""
     )
 
     try:
         res = await client.chat.completions.create(
             model=OPENAI_MODEL,
             messages=[
-                {"role": "system", "content": follow_system},
-                {"role": "assistant", "content": STATE["analysis"]["summary"]},
-                {"role": "user", "content": prompt},
+                {"role": "system",    "content": follow_system},
+                {"role": "assistant", "content": STATE['analysis']['summary']},
+                {"role": "user",      "content": prompt},
             ],
         )
         answer = res.choices[0].message.content
@@ -125,3 +134,34 @@ async def chat(request: Request):
         raise HTTPException(500, f"OpenAI error: {exc}") from exc
 
     return JSONResponse({"reply": answer})
+
+
+# ------------------------------------------------------------------
+# helper: call GPT for the initial analysis (with images & goals)
+# ------------------------------------------------------------------
+async def _gpt_analysis(images):
+    encoded = [
+        {
+            "type": "image_url",
+            "image_url": {
+                "url": "data:image/png;base64," + base64.b64encode(img.read_bytes()).decode()
+            },
+        } for img in images
+    ]
+
+    system_prompt = (
+        f"You are ConsultBot, a highly-skilled data analyst specialised in {STATE['use_case']}.\n"
+        f"User goals: {STATE['goals']}.\n"
+        "Focus ONLY on insights from the dataset and charts.\n"
+        "If asked something unrelated, reply:\n"
+        "\"I'm here to help with business insights based on your uploaded data. Let's focus on that.\""
+    )
+
+    res = await client.chat.completions.create(
+        model=OPENAI_MODEL,
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user",   "content": [*encoded, {"type": "text", "text": "Provide your analysis."}]},
+        ],
+    )
+    return res.choices[0].message.content

@@ -106,7 +106,7 @@ if (document.querySelector(".chatbot-panel")) {
 
       // placeholder while waiting
       const waitDiv = document.createElement("div");
-      waitDiv.innerHTML = "<em>Bot is thinking…</em>";
+      waitDiv.innerHTML = "<em>ConsultBot is thinking…</em>";
       chatWindow.appendChild(waitDiv);
       chatWindow.scrollTop = chatWindow.scrollHeight;
 
