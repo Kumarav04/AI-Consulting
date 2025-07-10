@@ -36,31 +36,49 @@ body {
   background-color: #2a2a2a;
   border: 1px solid #555;
   border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  transition: background 0.3s;
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
+  padding: 1rem;
   font-size: 1.2rem;
-  cursor: pointer;
-  position: relative;
-  transition: background 0.3s;
-  padding-bottom: 2.25rem; 
+
+  opacity: 0;
+  transform: scale(0.8);
+  animation-duration: 0.8s;
+  animation-fill-mode: forwards;
+}
+
+.use-case span {
+  display: block;
+  transition: transform 0.3s ease;
 }
 
 .use-case:hover {
-  background-color: #3a3a3a;
+  background-color: #082c06;
+}
+
+.use-case:hover span {
+  transform: translateY(-1.2rem);
 }
 
 .use-case::after {
   content: attr(data-info);
   position: absolute;
-  bottom: .35rem;              
+  bottom: 1rem;
   left: 50%;
   transform: translateX(-50%);
-  font-size: .9rem;
+  font-size: 0.9rem;
   color: #ccc;
   opacity: 0;
-  transition: opacity .25s;
-  pointer-events: none;
+  transition: opacity 0.3s;
+  text-align: center;
+  max-width: 90%;
+  line-height: 1.3;
 }
 
 .use-case:hover::after {
@@ -72,6 +90,7 @@ body {
   padding: 2rem;
   display: flex;
   flex-direction: column;
+  height:100%;
 }
 
 .placeholder-tips {
@@ -108,11 +127,17 @@ body {
   border-radius: 6px;
   overflow-y: auto;
   box-shadow: inset 0 0 5px rgba(0,0,0,0.3);
+  flex:1 1 auto;
 }
 
 .chat-form {
   display: flex;
   gap: 0.5rem;
+  margin-top:auto;            /* pushes it to the bottom of flex column */
+  position:sticky;
+  bottom:0;                   /* stick to the panel’s bottom edge */
+  background:#2d2d2d;         /* same bg so scroll looks seamless */
+  padding-bottom:0.75rem;  
 }
 
 .chat-form input {
@@ -160,4 +185,102 @@ body {
   margin-top: 1rem;
   border-radius: 4px;
   box-shadow: 0 0 5px rgba(0,0,0,0.4);
+}
+
+.slide-in-container {
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  height: 2rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.slide-in-text {
+  position: relative;
+  transform: translateX(100vw);
+  animation: slideToCenter 1.8s ease-out forwards;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #ccc;
+  white-space: nowrap;
+}
+
+@keyframes slideToCenter {
+  to {
+    transform: translateX(0);
+  }
+}
+
+
+/* Individual positions (based on tile index/order) */
+/* Assign entrance animations per tile */
+.use-case:nth-child(1) {
+  animation-name: tileFromTopLeft;
+  animation-delay: 1.5s;
+}
+.use-case:nth-child(2) {
+  animation-name: tileFromTopRight;
+  animation-delay: 1.7s;
+}
+.use-case:nth-child(3) {
+  animation-name: tileFromBottomLeft;
+  animation-delay: 1.9s;
+}
+.use-case:nth-child(4) {
+  animation-name: tileFromBottomRight;
+  animation-delay: 2.1s;
+}
+.use-case:nth-child(5) {
+  animation-name: tileFromCenter;
+  animation-delay: 2.3s;
+}
+
+
+/* Define animations */
+@keyframes tileFromTopLeft {
+  from { transform: translate(-100px, -100px); opacity: 0; }
+  to   { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes tileFromTopRight {
+  from { transform: translate(100px, -100px); opacity: 0; }
+  to   { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes tileFromBottomLeft {
+  from { transform: translate(-100px, 100px); opacity: 0; }
+  to   { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes tileFromBottomRight {
+  from { transform: translate(100px, 100px); opacity: 0; }
+  to   { transform: translate(0, 0); opacity: 1; }
+}
+
+@keyframes tileFromCenter {
+  from { transform: scale(0.6); opacity: 0; }
+  to   { transform: scale(1); opacity: 1; }
+}
+
+.tagline {
+  opacity: 0;
+  transform: translateX(100%);
+  animation: slideInTagline 1s ease-out forwards;
+  animation-delay: 0.2s;
+}
+
+@keyframes slideInTagline {
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+
+.preload .tagline,
+.preload .use-case {
+  animation: none !important;
+  opacity: 0;
 }

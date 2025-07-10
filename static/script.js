@@ -139,3 +139,8 @@ if (document.querySelector(".chatbot-panel")) {
       }
     });
 }
+
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.body.classList.remove("preload");
+});
