@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse, PlainTextResponse
 from openai import AsyncOpenAI, OpenAIError
 
 from app.standardize import standardize_csv, ColumnMappingNeeded
-from app.visualize  import create_visualizations
+from app.visualize import create_relevant_charts
 
 client       = AsyncOpenAI()
 OPENAI_MODEL = "gpt-4o"
@@ -68,7 +68,7 @@ async def chat(request: Request):
         STATE["goals"] = prompt                 # remember goals
         try:
             std_csv = standardize_csv(STATE["csv"])
-            images  = create_visualizations(std_csv, STATE["csv"].parent)
+            images = create_relevant_charts(std_csv, STATE["csv"].parent, prompt)
         except ColumnMappingNeeded as e:
             # ask user to map missing columns
             STATE["missing"] = e.missing
@@ -99,7 +99,7 @@ async def chat(request: Request):
 
         try:
             std_csv = standardize_csv(STATE["csv"], user_map=user_map)
-            images  = create_visualizations(std_csv, STATE["csv"].parent)
+            images = create_relevant_charts(std_csv, STATE["csv"].parent, STATE["goals"])
             del STATE["missing"]            # mapping worked
         except ColumnMappingNeeded as e:
             STATE["missing"] = e.missing    # still missing
